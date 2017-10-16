@@ -1,0 +1,10 @@
+requests
+flask
+arrow
+sqlalchemy
+flask-sqlalchemy
+sqlalchemy-utils
+psycopg2
+uwsgi
+flask-restful
+beautifulsoup4

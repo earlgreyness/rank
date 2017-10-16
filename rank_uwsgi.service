@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI server instance configured to serve Rank backend API
+After=network.target
+
+[Service]
+User=rank
+Group=www-data
+WorkingDirectory=/home/rank/back
+Environment="PATH=/home/rank/back/venv/bin"
+ExecStart=/home/rank/back/venv/bin/uwsgi --ini rank_uwsgi.ini
+
+[Install]
+WantedBy=multi-user.target
