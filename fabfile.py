@@ -78,8 +78,8 @@ def reload():
         run('systemctl restart {}'.format(SYSTEMD))
 
 
-def deploy(full=False):
-    if full:
+def deploy(full=False, db=False):
+    if db:
         setup_db()
     run('mkdir -p {}'.format(REMOTE_ROOT))
 

@@ -1,5 +1,4 @@
 from functools import partial
-from collections import namedtuple
 from urllib.parse import urlparse, parse_qs
 from base64 import b64decode
 
@@ -24,15 +23,17 @@ class Site(db.Model):
     name = Column(String, unique=True)
 
 
-class Query(db.Model):
+class Phrase(db.Model):
+    __tablename__ = 'query'
+
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
 
-    @staticmethod
-    def rotate(delta):
+    @classmethod
+    def rotate(cls, delta):
         accumulated_offset = Counter.increment_offset(delta)
-        offset = accumulated_offset % Query.query.count()
-        query = Query.query.order_by('name').offset(offset).limit(delta)
+        offset = accumulated_offset % cls.query.count()
+        query = cls.query.order_by('name').offset(offset).limit(delta)
         return [x.name for x in query]
 
 
@@ -53,20 +54,18 @@ class Page(db.Model):
 
     def parse(self):
         soup = BeautifulSoup(self.get_text(), 'html.parser')
-
-        Site_ = namedtuple('Site', 'url ad')
-        sites = []
-
         divs = soup.select('div.organic.typo.typo_text_m')
 
         if not divs:
             raise HTMLParsingError('divs not found in page. Is it capcha?')
 
+        sites = []
+
         for div in divs:
             a = div.select('div.path.organic__path a')[0]
             url = a.text.replace('\n', '').replace(' ', '')
             ad = bool(div.select('div.label_color_yellow'))
-            sites.append(Site_(url, ad))
+            sites.append(dict(url=url, ad=ad))
 
         return sites
 
@@ -104,7 +103,7 @@ class Page(db.Model):
 
         results = []
 
-        for phrase in Query.query:
+        for phrase in Phrase.query:
             page = (
                 Page.query
                     .filter(Page.positions.isnot(None))

@@ -1,15 +1,15 @@
 from flask import request
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, abort
 
 from rank import app, db
 from rank.models import (
     url_from_query, Page, query_from_url,
-    Query, Site)
+    Phrase, Site)
 
 
 class Donors(Resource):
     def get(self):
-        phrases = Query.rotate(5)
+        phrases = Phrase.rotate(5)
         return {
             'delay': 4 * 60 * 1000,  # msec
             'donors': [url_from_query(x) for x in phrases],
@@ -19,11 +19,14 @@ class Donors(Resource):
 class Accept(Resource):
     def post(self):
         incoming = request.get_json(force=True)
-
+        try:
+            url = incoming['url']
+            text = incoming['text']
+        except KeyError as e:
+            app.logger.error('Key missing in json: {}. We got: {}'.format(e, incoming))
+            abort(400)
         page = Page(
-            url=incoming['url'],
-            q=query_from_url(incoming['url']),
-            text=incoming['text'],
+            url=url, q=query_from_url(url), text=text,
             contributor=request.remote_addr,
         )
         db.session.add(page)
@@ -44,7 +47,7 @@ class Queries(Resource):
     def post(self):
         queries = request.json['queries']
         app.logger.info('new queries: {}'.format(queries))
-        new(queries, Query)
+        new(queries, Phrase)
         return {'success': True}
 
 

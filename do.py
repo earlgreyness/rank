@@ -8,7 +8,7 @@ def main():
     pages = Page.query.filter(Page.positions.is_(None))
 
     for page in pages:
-        page.positions = [{'url': x.url, 'ad': x.ad} for x in page.parse()]
+        page.positions = page.parse()
         page.q = query_from_url(page.url)
         page.text = ''
         app.logger.info(
