@@ -1,7 +1,7 @@
 from functools import partial
 from collections import namedtuple
 from urllib.parse import urlparse, parse_qs
-import base64
+from base64 import b64decode
 
 from sqlalchemy import Column as BaseColumn, Integer, String, JSON
 from sqlalchemy.ext.mutable import MutableList
@@ -24,6 +24,13 @@ class Query(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
 
+    @staticmethod
+    def rotate(delta):
+        accumulated_offset = Counter.increment_offset(delta)
+        offset = accumulated_offset % Query.query.count()
+        query = Query.query.order_by('name').offset(offset).limit(delta)
+        return [x.name for x in query]
+
 
 class Page(db.Model):
     id = Column(Integer, primary_key=True)
@@ -35,10 +42,10 @@ class Page(db.Model):
     positions = Column(MutableList.as_mutable(JSON), nullable=True)
 
     def __repr__(self):
-        return "<Page({!r}, '{}')>".format(self.q, self.date_created)
+        return "<Page('{}', {!r})>".format(self.date_created, self.q)
 
     def get_text(self):
-        return base64.b64decode(self.text).decode('utf-8')
+        return b64decode(self.text).decode('utf-8')
 
     def parse(self):
         soup = BeautifulSoup(self.get_text(), 'html.parser')
@@ -63,30 +70,65 @@ class Page(db.Model):
                 url = 'http://' + url
             return urlparse(url).netloc
 
-        def extract(pos, page, n, m):
-            return dict(
-                site=domain(pos['url']),
-                query=page.q,
-                update=page.date_created.timestamp,
-                position=n,
-                advertising=pos['ad'],
-                advertising_position=m,
-            )
+        interest = {s.name for s in Site.query}
+
+        def prepare(page):
+            items = []
+            guarantee = False
+            touched_organic = False
+            n = 0
+            for p in page.positions:
+                if not p['ad']:
+                    touched_organic = True
+                    continue
+                n += 1
+                guarantee = guarantee or touched_organic
+                site = domain(p['url'])
+                if site not in interest:
+                    continue
+                items.append(dict(
+                    site=site,
+                    query=page.q,
+                    update=page.date_created.timestamp,
+                    position=n,
+                    guarantee=guarantee,
+                ))
+            return items
 
         results = []
 
-        query = Page.query.filter(
-            Page.positions.isnot(None)).order_by(Page.date_created.desc())
-
-        for page in query:
-            ad_pos = {x['url']: n for n, x in enumerate(page.positions, start=1) if x['ad']}
-            results.extend(
-                extract(p, page, n, ad_pos.get(p['url']))
-                for n, p in enumerate(page.positions, start=1)
+        for phrase in Query.query:
+            page = (
+                Page.query
+                    .filter(Page.positions.isnot(None))
+                    .filter(Page.q == phrase.name)
+                    .order_by(Page.date_created.desc())
+                    .first()
             )
+            if page is not None:
+                results.extend(prepare(page))
 
-        interest = {s.name for s in Site.query}
-        return [x for x in results if x['site'] in interest]
+        return results
+
+
+class Counter(db.Model):
+    id = Column(Integer, primary_key=True)
+    key = Column(String, unique=True)
+    value = Column(Integer, default=0)
+    date_changed = Column(ArrowType(timezone=True), default=arrow.now, onupdate=arrow.now)
+
+    @classmethod
+    def increment_offset(cls, delta):
+        x = cls.query.filter_by(key='offset').first()
+        if x is None:
+            x = cls(key='offset', value=delta)
+            db.session.add(x)
+            current = 0
+        else:
+            current = x.value
+            x.value = cls.value + delta
+        db.session.commit()
+        return current
 
 
 def url_from_query(query):
@@ -98,7 +140,3 @@ def url_from_query(query):
 def query_from_url(url):
     query = parse_qs(urlparse(url).query)
     return query.get('text', [])[0]
-
-
-def new_phrases():
-    return [q.name for q in Query.query]

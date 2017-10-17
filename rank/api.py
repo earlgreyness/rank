@@ -2,16 +2,17 @@ from flask import request
 from flask_restful import Api, Resource
 
 from rank import app, db
-from rank.models import url_from_query, Page, query_from_url, new_phrases, Query, Site
+from rank.models import (
+    url_from_query, Page, query_from_url,
+    Query, Site)
 
 
 class Donors(Resource):
     def get(self):
-        queries = new_phrases()
-        donors = [url_from_query(q) for q in queries]
+        phrases = Query.rotate(5)
         return {
-            'delay': 10 * 60 * 1000,  # msec
-            'donors': donors,
+            'delay': 4 * 60 * 1000,  # msec
+            'donors': [url_from_query(x) for x in phrases],
         }
 
 
