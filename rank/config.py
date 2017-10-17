@@ -7,6 +7,9 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # flask-restful
 RESTFUL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=4)
 
+# flask-cors
+CORS_HEADERS = 'Content-Type'
+
 # custom
 POSTGRESQL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=2)
 PROJECT_ROOT = op.dirname(op.realpath(__file__))
