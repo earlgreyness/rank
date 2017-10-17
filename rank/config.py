@@ -8,6 +8,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 RESTFUL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=4)
 
 # custom
+POSTGRESQL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=2)
 PROJECT_ROOT = op.dirname(op.realpath(__file__))
 LOGGING = {
     'version': 1,

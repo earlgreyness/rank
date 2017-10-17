@@ -18,7 +18,8 @@ itsdangerous==0.24        # via flask
 jinja2==2.9.6             # via flask
 markupsafe==1.0           # via jinja2
 psycopg2==2.7.3.1
-python-dateutil==2.6.1    # via aniso8601, arrow
+python-crontab==2.2.4
+python-dateutil==2.6.1    # via aniso8601, arrow, python-crontab
 pytz==2017.2              # via flask-restful
 requests==2.18.4
 six==1.11.0               # via flask-restful, python-dateutil, sqlalchemy-utils

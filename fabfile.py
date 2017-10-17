@@ -19,6 +19,10 @@ FILES = [
     PROJ + '_uwsgi.ini',
     'requirements.txt',
 ]
+FILES += [
+    'setup_cron.py',
+    'do.py',
+]
 
 env.hosts = ['188.227.72.189']
 env.user = PROJ
@@ -74,11 +78,10 @@ def reload():
         run('systemctl restart {}'.format(SYSTEMD))
 
 
-def deploy(full=False, db=False):
-    if db:
-        setup_db()
+def deploy(full=False):
     if full:
-        run('mkdir -p {}'.format(REMOTE_ROOT))
+        setup_db()
+    run('mkdir -p {}'.format(REMOTE_ROOT))
 
     with cd(REMOTE_ROOT), lcd(LOCAL_ROOT):
         run('mkdir -p logs')
@@ -95,6 +98,8 @@ def deploy(full=False, db=False):
 
         run('venv/bin/pip3 install --upgrade pip')
         run('venv/bin/pip3 install -r requirements.txt')
+
+        run('venv/bin/python3 setup_cron.py')
 
     if full:
         setup_systemd()

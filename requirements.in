@@ -8,3 +8,4 @@ psycopg2
 uwsgi
 flask-restful
 beautifulsoup4
+python-crontab
