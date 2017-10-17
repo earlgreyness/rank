@@ -3,6 +3,7 @@ import json
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 from rank.utils import configure_logging
 
@@ -21,6 +22,7 @@ app = Flask(__name__)
 app.config.from_object('rank.config')
 configure_logging(app)
 db = SQLAlchemyCustomized(app)
+CORS(app)
 
 import rank.models
 import rank.api

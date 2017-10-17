@@ -10,6 +10,7 @@ beautifulsoup4==4.6.0
 certifi==2017.7.27.1      # via requests
 chardet==3.0.4            # via requests
 click==6.7                # via flask
+flask-cors==3.0.3
 flask-restful==0.3.6
 flask-sqlalchemy==2.3.0
 flask==0.12.2
@@ -22,7 +23,7 @@ python-crontab==2.2.4
 python-dateutil==2.6.1    # via aniso8601, arrow, python-crontab
 pytz==2017.2              # via flask-restful
 requests==2.18.4
-six==1.11.0               # via flask-restful, python-dateutil, sqlalchemy-utils
+six==1.11.0               # via flask-cors, flask-restful, python-dateutil, sqlalchemy-utils
 sqlalchemy-utils==0.32.17
 sqlalchemy==1.1.14
 urllib3==1.22             # via requests

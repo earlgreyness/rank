@@ -9,3 +9,4 @@ uwsgi
 flask-restful
 beautifulsoup4
 python-crontab
+flask-cors
