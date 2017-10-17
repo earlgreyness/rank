@@ -8,9 +8,10 @@ def main():
     pages = Page.query.filter(Page.positions.is_(None))
 
     for page in pages:
-        app.logger.info('Working on {!r}'.format(page))
         page.positions = [{'url': x.url, 'ad': x.ad} for x in page.parse()]
         page.q = query_from_url(page.url)
+        app.logger.info(
+            'Parsed {} positions for {!r}'.format(len(page.positions), page))
 
     db.session.commit()
 

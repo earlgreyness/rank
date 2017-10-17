@@ -27,6 +27,7 @@ class Accept(Resource):
         )
         db.session.add(page)
         db.session.commit()
+        app.logger.info('Accepted {}'.format(page))
 
         return {'success': True}
 
