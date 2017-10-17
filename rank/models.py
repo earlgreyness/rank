@@ -15,6 +15,10 @@ from rank import db
 Column = partial(BaseColumn, nullable=False)
 
 
+class HTMLParsingError(Exception):
+    pass
+
+
 class Site(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
@@ -54,6 +58,9 @@ class Page(db.Model):
         sites = []
 
         divs = soup.select('div.organic.typo.typo_text_m')
+
+        if not divs:
+            raise HTMLParsingError('divs not found in page. Is it capcha?')
 
         for div in divs:
             a = div.select('div.path.organic__path a')[0]

@@ -10,6 +10,7 @@ def main():
     for page in pages:
         page.positions = [{'url': x.url, 'ad': x.ad} for x in page.parse()]
         page.q = query_from_url(page.url)
+        page.text = ''
         app.logger.info(
             'Parsed {} positions for {!r}'.format(len(page.positions), page))
 
