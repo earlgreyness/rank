@@ -5,7 +5,8 @@ from rank import db, app
 
 @handle_exceptions
 def main():
-    pages = Page.query.filter(Page.positions.is_(None), Page.captcha.is_(False))
+    pages = Page.query.filter(
+        Page.positions.is_(None), Page.captcha.is_(False)).order_by('id')
 
     for page in pages:
         page.q = query_from_url(page.url)
