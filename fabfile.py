@@ -1,5 +1,6 @@
 import os.path as op
 import importlib
+import sys
 from urllib.parse import urlparse
 
 from fabric.api import put, settings, run, env, local
@@ -7,24 +8,25 @@ from fabric.context_managers import cd, lcd
 from fabric.contrib import files
 
 PROJ = 'rank'
-
-config = importlib.import_module(PROJ + '.config')
-
-LOCAL_ROOT = op.dirname(op.realpath(__file__))
-REMOTE_ROOT = '/home/{}/back'.format(PROJ)
-NGINX = PROJ + '.nginx'
-SYSTEMD = PROJ + '_uwsgi.service'
+HOST = '188.227.72.189'
 FILES = [
     PROJ + '_uwsgi.py',
     PROJ + '_uwsgi.ini',
     'requirements.txt',
-]
-FILES += [
     'setup_cron.py',
     'do.py',
 ]
 
-env.hosts = ['188.227.72.189']
+LOCAL_ROOT = op.dirname(op.realpath(__file__))
+sys.path.insert(0, op.join(LOCAL_ROOT, PROJ))
+# Importing config as a standalone file, not within PROJ module:
+config = importlib.import_module('config')
+print(config.SQLALCHEMY_DATABASE_URI)
+REMOTE_ROOT = '/home/{}/back'.format(PROJ)
+NGINX = PROJ + '.nginx'
+SYSTEMD = PROJ + '_uwsgi.service'
+
+env.hosts = [HOST]
 env.user = PROJ
 env.shell = '/bin/bash -c'  # dropped -l flag
 env.colorize_errors = True
@@ -33,7 +35,6 @@ env.colorize_errors = True
 def psql(command):
     command = 'psql -c "{}"'.format(command)
     sent = 'sudo -u postgres {}'.format(command)
-    print(sent)
     with settings(user='root'):
         run(sent)
 
@@ -99,7 +100,8 @@ def deploy(full=False, db=False):
         run('venv/bin/pip3 install --upgrade pip')
         run('venv/bin/pip3 install -r requirements.txt')
 
-        run('venv/bin/python3 setup_cron.py')
+        if 'setup_cron.py' in FILES:
+            run('venv/bin/python3 setup_cron.py')
 
     if full:
         setup_systemd()
