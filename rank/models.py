@@ -75,7 +75,7 @@ class Page(db.Model):
         divs = soup.select('div.organic.typo.typo_text_m')
 
         if not divs:
-            raise HTMLParsingError('divs not found in page. Is it capcha?')
+            raise HTMLParsingError('divs ".organic.typo.typo_text_m" not found in page')
 
         sites = []
 

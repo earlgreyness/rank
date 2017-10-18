@@ -113,3 +113,4 @@ def download(page_id):
         cmd = 'from rank.models import Page; t = Page.query.get({}).get_text(); print(t)'.format(page_id)
         run('venv/bin/python3 -c "{}" > html.html'.format(cmd))
         get('html.html', '.')
+        run('rm html.html')
