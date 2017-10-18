@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import arrow
 import requests
 
-from rank import db
+from rank import db, app
 
 Column = partial(BaseColumn, nullable=False)
 
@@ -138,6 +138,32 @@ class Page(db.Model):
             seen.add(page.q)
 
         return results
+
+
+class Contributor(db.Model):
+    id = Column(Integer, primary_key=True)
+    date_created = Column(ArrowType(timezone=True), default=arrow.now)
+    name = Column(String, default='')
+    ip = Column(String)
+
+    @classmethod
+    def how_many(cls):
+        moment = arrow.now().replace(hours=-1)
+        return cls.query.distinct(cls.ip).filter(
+            cls.date_created > moment).count()
+
+    @classmethod
+    def delay(cls, n):
+        phrases = Phrase.query.count()
+        workers = cls.how_many()
+        cycle = app.config['CYCLE']
+
+        try:
+            d = cycle * workers * n / phrases
+        except ZeroDivisionError:
+            d = 0
+
+        return int(max(d, app.config['MIN_DELAY']))
 
 
 class Counter(db.Model):

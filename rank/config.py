@@ -11,6 +11,9 @@ RESTFUL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=4)
 CORS_HEADERS = 'Content-Type'
 
 # custom
+CYCLE = 45 * 60  # sec
+AMOUNT = 5
+MIN_DELAY = 10 * 60  # sec
 POSTGRESQL_JSON = dict(ensure_ascii=False, sort_keys=True, indent=2)
 PROJECT_ROOT = op.dirname(op.realpath(__file__))
 LOGGING = {

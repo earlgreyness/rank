@@ -4,14 +4,18 @@ from flask_restful import Api, Resource, abort
 from rank import app, db
 from rank.models import (
     url_from_query, Page, query_from_url,
-    Phrase, Site)
+    Phrase, Site, Contributor)
 
 
 class Donors(Resource):
     def get(self):
-        phrases = Phrase.rotate(5)
+        n = app.config['AMOUNT']
+        phrases = Phrase.rotate(n)
+        delay = Contributor.delay(n)
+        db.session.add(Contributor(ip=request.remote_addr))
+        db.session.commit()
         return {
-            'delay': 4 * 60 * 1000,  # msec
+            'delay': int(delay * 1000),  # msec
             'donors': [url_from_query(x) for x in phrases],
         }
 
