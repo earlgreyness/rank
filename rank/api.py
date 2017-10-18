@@ -20,15 +20,16 @@ class Accept(Resource):
     def post(self):
         incoming = request.get_json(force=True)
         try:
-            url = incoming['url']
-            text = incoming['text']
+            url = incoming['url'].strip()
+            text = incoming['text'].strip()
         except KeyError as e:
             app.logger.error('Key missing in json: {}. We got: {}'.format(e, incoming))
             abort(400)
-        page = Page(
-            url=url, q=query_from_url(url), text=text,
-            contributor=request.remote_addr,
-        )
+        ip = request.remote_addr
+        if not text:
+            app.logger.error('Got empty text from {}'.format(ip))
+            abort(400)
+        page = Page(url=url, q=query_from_url(url), text=text, contributor=ip)
         db.session.add(page)
         db.session.commit()
         app.logger.info('Accepted {}'.format(page))

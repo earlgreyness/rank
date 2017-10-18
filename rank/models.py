@@ -2,7 +2,7 @@ from functools import partial
 from urllib.parse import urlparse, parse_qs
 from base64 import b64decode
 
-from sqlalchemy import Column as BaseColumn, Integer, String, JSON
+from sqlalchemy import Column as BaseColumn, Integer, String, JSON, Boolean
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy_utils import ArrowType
 from bs4 import BeautifulSoup
@@ -15,6 +15,10 @@ Column = partial(BaseColumn, nullable=False)
 
 
 class HTMLParsingError(Exception):
+    pass
+
+
+class YandexCaptcha(Exception):
     pass
 
 
@@ -45,15 +49,29 @@ class Page(db.Model):
     date_created = Column(ArrowType(timezone=True), default=arrow.now)
     contributor = Column(String)
     positions = Column(MutableList.as_mutable(JSON), nullable=True)
+    captcha = Column(Boolean, default=False)
 
     def __repr__(self):
-        return "<Page({}, '{}', {!r})>".format(self.id, self.date_created, self.q)
+        if self.date_created is None:
+            d = None
+        else:
+            d = self.date_created.format('DD MMM HH:mm')
+        return "<Page({}, {!r}, {!r})>".format(self.id, d, self.q)
 
     def get_text(self):
         return b64decode(self.text).decode('utf-8')
 
     def parse(self):
         soup = BeautifulSoup(self.get_text(), 'html.parser')
+
+        captcha = bool(soup(href='captcha.min.css'))
+        if captcha:
+            raise YandexCaptcha()
+
+        if bool(soup.select('div.misspell__message')):
+            # Absolutely nothing was found by Yandex.
+            return []
+
         divs = soup.select('div.organic.typo.typo_text_m')
 
         if not divs:
@@ -108,7 +126,7 @@ class Page(db.Model):
             Page.query
             .filter(Page.positions.isnot(None))
             .filter(Page.q.in_(phrases))
-            .filter(Page.date_created > arrow.now().replace(hours=-6))
+            .filter(Page.date_created > arrow.now().replace(hours=-12))
             .order_by(Page.date_created.desc())
             .limit(n * 2)
         )
@@ -150,4 +168,4 @@ def url_from_query(query):
 
 def query_from_url(url):
     query = parse_qs(urlparse(url).query)
-    return query.get('text', [])[0]
+    return query.get('text', [''])[0]

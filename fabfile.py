@@ -3,7 +3,7 @@ import importlib
 import sys
 from urllib.parse import urlparse
 
-from fabric.api import put, settings, run, env, local
+from fabric.api import put, settings, run, env, local, get
 from fabric.context_managers import cd, lcd
 from fabric.contrib import files
 
@@ -21,7 +21,6 @@ LOCAL_ROOT = op.dirname(op.realpath(__file__))
 sys.path.insert(0, op.join(LOCAL_ROOT, PROJ))
 # Importing config as a standalone file, not within PROJ module:
 config = importlib.import_module('config')
-print(config.SQLALCHEMY_DATABASE_URI)
 REMOTE_ROOT = '/home/{}/back'.format(PROJ)
 NGINX = PROJ + '.nginx'
 SYSTEMD = PROJ + '_uwsgi.service'
@@ -107,3 +106,10 @@ def deploy(full=False, db=False):
         setup_systemd()
         setup_nginx()
     reload()
+
+
+def download(page_id):
+    with cd(REMOTE_ROOT), lcd(LOCAL_ROOT):
+        cmd = 'from rank.models import Page; t = Page.query.get({}).get_text(); print(t)'.format(page_id)
+        run('venv/bin/python3 -c "{}" > html.html'.format(cmd))
+        get('html.html', '.')
