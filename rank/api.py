@@ -27,12 +27,12 @@ class Accept(Resource):
             abort(400)
         ip = request.remote_addr
         if not text:
-            app.logger.error('Got empty text from {}'.format(ip))
+            app.logger.error('From {} got empty text'.format(ip))
             abort(400)
         page = Page(url=url, q=query_from_url(url), text=text, contributor=ip)
         db.session.add(page)
         db.session.commit()
-        app.logger.info('Accepted {}'.format(page))
+        app.logger.info('From {} accepted {!r}'.format(ip, page))
 
         return {'success': True}
 
