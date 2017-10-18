@@ -1,4 +1,4 @@
-from rank.models import Page, query_from_url
+from rank.models import Page, query_from_url, HTMLParsingError
 from rank.utils import handle_exceptions
 from rank import db, app
 
@@ -8,7 +8,11 @@ def main():
     pages = Page.query.filter(Page.positions.is_(None))
 
     for page in pages:
-        page.positions = page.parse()
+        try:
+            page.positions = page.parse()
+        except HTMLParsingError as e:
+            app.logger.error('Cannot parse page {!r}: {}'.format(page, e))
+            continue
         page.q = query_from_url(page.url)
         page.text = ''
         app.logger.info(

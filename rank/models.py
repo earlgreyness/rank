@@ -47,7 +47,7 @@ class Page(db.Model):
     positions = Column(MutableList.as_mutable(JSON), nullable=True)
 
     def __repr__(self):
-        return "<Page('{}', {!r})>".format(self.date_created, self.q)
+        return "<Page({}, '{}', {!r})>".format(self.id, self.date_created, self.q)
 
     def get_text(self):
         return b64decode(self.text).decode('utf-8')
@@ -102,17 +102,22 @@ class Page(db.Model):
             return items
 
         results = []
-
-        for phrase in Phrase.query:
-            page = (
-                Page.query
-                    .filter(Page.positions.isnot(None))
-                    .filter(Page.q == phrase.name)
-                    .order_by(Page.date_created.desc())
-                    .first()
-            )
-            if page is not None:
-                results.extend(prepare(page))
+        phrases = {x.name.strip() for x in Phrase.query if x.name.strip()}
+        n = len(phrases)
+        pages_qry = (
+            Page.query
+            .filter(Page.positions.isnot(None))
+            .filter(Page.q.in_(phrases))
+            .filter(Page.date_created > arrow.now().replace(hours=-6))
+            .order_by(Page.date_created.desc())
+            .limit(n * 2)
+        )
+        seen = set()
+        for page in pages_qry:
+            if page.q in seen:
+                continue
+            results.extend(prepare(page))
+            seen.add(page.q)
 
         return results
 
