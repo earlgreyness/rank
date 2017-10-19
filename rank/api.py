@@ -43,7 +43,7 @@ class Accept(Resource):
 
 def new(array, cls):
     db.session.query(cls).delete()
-    for s in array:
+    for s in set(array):
         db.session.add(cls(name=s))
     db.session.commit()
 
