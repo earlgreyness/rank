@@ -56,7 +56,7 @@ class Queries(Resource):
         return {'success': True}
 
     def get(self):
-        return {'queries': Phrase.query.order_by('name').all()}
+        return {'queries': [x.name for x in Phrase.query.order_by('name')]}
 
 
 class Sites(Resource):
@@ -67,7 +67,7 @@ class Sites(Resource):
         return {'success': True}
 
     def get(self):
-        return {'sites': Site.query.order_by('name').all()}
+        return {'sites': [x.name for x in Site.query.order_by('name')]}
 
 
 class Result(Resource):
