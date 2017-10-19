@@ -55,6 +55,9 @@ class Queries(Resource):
         new(queries, Phrase)
         return {'success': True}
 
+    def get(self):
+        return {'queries': Phrase.query.order_by('name').all()}
+
 
 class Sites(Resource):
     def post(self):
@@ -62,6 +65,9 @@ class Sites(Resource):
         app.logger.info('new sites: {}'.format(sites))
         new(sites, Site)
         return {'success': True}
+
+    def get(self):
+        return {'sites': Site.query.order_by('name').all()}
 
 
 class Result(Resource):
