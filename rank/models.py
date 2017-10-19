@@ -56,7 +56,7 @@ class Page(db.Model):
             d = None
         else:
             d = self.date_created.format('DD MMM HH:mm')
-        return "<Page({}, {!r}, {!r})>".format(self.id, d, self.q)
+        return "<Page({!r}, {}, {!r}, {!r})>".format(self.contributor, self.id, d, self.q)
 
     def get_text(self):
         return b64decode(self.text).decode('utf-8')
