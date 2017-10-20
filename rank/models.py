@@ -1,9 +1,11 @@
 from functools import partial
 from urllib.parse import urlparse, parse_qs
 from base64 import b64decode
+import random
 
 from sqlalchemy import Column as BaseColumn, Integer, String, JSON, Boolean
 from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.sql.expression import func
 from sqlalchemy_utils import ArrowType
 from bs4 import BeautifulSoup
 import arrow
@@ -32,13 +34,18 @@ class Phrase(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
+    last_parsed_date = Column(ArrowType(timezone=True))
 
     @classmethod
-    def rotate(cls, delta):
-        accumulated_offset = Counter.increment_offset(delta)
-        offset = accumulated_offset % cls.query.count()
-        query = cls.query.order_by('name').offset(offset).limit(delta)
-        return [x.name for x in query]
+    def rotate(cls, n):
+        q = cls.query
+        q_1 = q.filter(cls.last_parsed_date.is_(None)).order_by(func.random()).limit(n)
+        q_2 = q.filter(cls.last_parsed_date.isnot(None)).order_by(cls.last_parsed_date)
+        names_random = [x.name for x in q_1]
+        m = max(0, n - len(names_random))
+        names = [x.name for x in q_2.limit(m * 5)]
+        random.shuffle(names)
+        return names_random + names[:m]
 
 
 class Page(db.Model):
@@ -57,6 +64,13 @@ class Page(db.Model):
         else:
             d = self.date_created.format('DD MMM HH:mm')
         return "<Page({!r}, {}, {!r}, {!r})>".format(self.contributor, self.id, d, self.q)
+
+    def update_phrase(self):
+        phrase = Phrase.query.filter_by(name=self.q).first()
+        if phrase is None:
+            app.logger.error('Phrase {!r} should exist but not found'.format(self.q))
+            return
+        phrase.last_parsed_date = arrow.now()
 
     def get_text(self):
         return b64decode(self.text).decode('utf-8')

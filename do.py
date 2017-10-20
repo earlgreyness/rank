@@ -19,6 +19,7 @@ def main():
             app.logger.error('Error parsing {!r}: {}'.format(page, e))
         else:
             page.text = ''
+            page.update_phrase()
             app.logger.info(
                 'Parsed {} positions for {!r}'.format(len(page.positions), page))
 
