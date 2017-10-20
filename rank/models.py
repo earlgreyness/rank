@@ -64,7 +64,7 @@ class Page(db.Model):
     def parse(self):
         soup = BeautifulSoup(self.get_text(), 'html.parser')
 
-        captcha = bool(soup(href='captcha.min.css'))
+        captcha = bool(soup(href='captcha.min.css')) or bool(soup(href='captcha_random.min.css'))
         if captcha:
             raise YandexCaptcha()
 
@@ -79,8 +79,13 @@ class Page(db.Model):
 
         sites = []
 
-        for div in divs:
-            a = div.select('div.path.organic__path a')[0]
+        for n, div in enumerate(divs):
+            aa = div.select('div.path.organic__path a')
+            if not aa:
+                app.logger.warning(
+                    'div.path.organic__path a not found in {}-th parent div'.format(n))
+                continue
+            a = aa[0]
             url = a.text.replace('\n', '').replace(' ', '')
             ad = bool(div.select('div.label_color_yellow'))
             sites.append(dict(url=url, ad=ad))
