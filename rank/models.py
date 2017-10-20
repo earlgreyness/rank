@@ -145,7 +145,6 @@ class Page(db.Model):
             Page.query
             .filter(Page.positions.isnot(None))
             .filter(Page.q.in_(phrases))
-            .filter(Page.date_created > arrow.now().replace(hours=-12))
             .order_by(Page.date_created.desc())
             .limit(n * 2)
         )
