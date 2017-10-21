@@ -106,6 +106,13 @@ class Page(db.Model):
 
         return sites
 
+    @classmethod
+    def pages_by_q(cls, phrases=None):
+        q = cls.query.distinct(Page.q).filter(Page.positions.isnot(None))
+        if phrases is not None:
+            q = q.filter(Page.q.in_(phrases))
+        return q.order_by(cls.q, cls.date_created.desc())
+
     @staticmethod
     def construct_results():
         def domain(url):
@@ -140,14 +147,8 @@ class Page(db.Model):
 
         results = []
         phrases = {x.name.strip() for x in Phrase.query if x.name.strip()}
-        n = len(phrases)
-        pages_qry = (
-            Page.query
-            .filter(Page.positions.isnot(None))
-            .filter(Page.q.in_(phrases))
-            .order_by(Page.date_created.desc())
-            .limit(n * 2)
-        )
+        pages_qry = Page.pages_by_q(phrases=phrases)
+
         seen = set()
         for page in pages_qry:
             if page.q in seen:
