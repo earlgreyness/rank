@@ -107,10 +107,13 @@ class Page(db.Model):
         return sites
 
     @classmethod
-    def pages_by_q(cls, phrases=None):
-        q = cls.query.distinct(Page.q).filter(Page.positions.isnot(None))
-        if phrases is not None:
-            q = q.filter(Page.q.in_(phrases))
+    def pages_by_q(cls, sub=False):
+        if sub:
+            phrases = {x.name.strip() for x in Phrase.query if x.name.strip()}
+        else:
+            phrases = db.session.query(Phrase.name)
+        q = cls.query.distinct(Page.q).filter(
+            Page.positions.isnot(None)).filter(Page.q.in_(phrases))
         return q.order_by(cls.q, cls.date_created.desc())
 
     @staticmethod
@@ -146,9 +149,7 @@ class Page(db.Model):
             return items
 
         results = []
-        phrases = {x.name.strip() for x in Phrase.query if x.name.strip()}
-        pages_qry = Page.pages_by_q(phrases=phrases)
-
+        pages_qry = Page.pages_by_q()
         seen = set()
         for page in pages_qry:
             if page.q in seen:
