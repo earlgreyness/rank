@@ -2,6 +2,7 @@ from functools import partial
 from urllib.parse import urlparse, parse_qs
 from base64 import b64decode
 import random
+import itertools
 
 from sqlalchemy import Column as BaseColumn, Integer, String, JSON, Boolean
 from sqlalchemy.ext.mutable import MutableList
@@ -107,14 +108,15 @@ class Page(db.Model):
         return sites
 
     @classmethod
-    def pages_by_q(cls, sub=False):
-        if sub:
-            phrases = {x.name.strip() for x in Phrase.query if x.name.strip()}
-        else:
-            phrases = db.session.query(Phrase.name)
-        q = cls.query.distinct(Page.q).filter(
-            Page.positions.isnot(None)).filter(Page.q.in_(phrases))
-        return q.order_by(cls.q, cls.date_created.desc())
+    def pages_query(cls):
+        phrases_subquery = db.session.query(Phrase.name)
+        return (
+            cls.query
+            .distinct(Page.q)
+            .filter(Page.positions.isnot(None))
+            .filter(Page.q.in_(phrases_subquery))
+            .order_by(cls.q, cls.date_created.desc())
+        )
 
     @staticmethod
     def construct_results():
@@ -148,16 +150,8 @@ class Page(db.Model):
                 ))
             return items
 
-        results = []
-        pages_qry = Page.pages_by_q()
-        seen = set()
-        for page in pages_qry:
-            if page.q in seen:
-                continue
-            results.extend(prepare(page))
-            seen.add(page.q)
-
-        return results
+        return list(itertools.chain.from_iterable(
+            prepare(x) for x in Page.pages_query()))
 
 
 class Contributor(db.Model):
