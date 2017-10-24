@@ -13,6 +13,7 @@ import arrow
 import requests
 
 from rank import db, app
+from rank.utils import domain
 
 Column = partial(BaseColumn, nullable=False)
 
@@ -130,11 +131,6 @@ class Page(db.Model):
 
     @staticmethod
     def construct_results():
-        def domain(url):
-            if not urlparse(url).scheme:
-                url = 'http://' + url
-            return urlparse(url).netloc
-
         interest = {s.name for s in Site.query}
 
         def prepare(page):

@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Api, Resource, abort
 
 from rank import app, db
+from rank.utils import domain
 from rank.models import (
     url_from_query, Page, query_from_url,
     Phrase, Site, Contributor)
@@ -63,6 +64,8 @@ class Queries(Resource):
 class Sites(Resource):
     def post(self):
         sites = request.json['sites']
+        sites = [s.strip() for s in sites if s.strip()]
+        sites = [domain(s) for s in sites]
         app.logger.info('new sites: {}'.format(sites))
         new(sites, Site)
         return {'success': True}

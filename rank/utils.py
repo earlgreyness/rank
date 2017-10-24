@@ -1,6 +1,7 @@
 import logging.config
 import logging
 from functools import wraps
+from urllib.parse import urlparse
 
 
 def configure_logging(app):
@@ -20,3 +21,9 @@ def handle_exceptions(f):
             logger.exception('')
 
     return decorated
+
+
+def domain(url):
+    if not urlparse(url).scheme:
+        url = 'http://' + url
+    return urlparse(url).netloc
