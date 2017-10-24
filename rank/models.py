@@ -76,6 +76,16 @@ class Page(db.Model):
         return b64decode(self.text).decode('utf-8')
 
     def parse(self):
+        yandex = 'yandex.ru' in self.url
+        if yandex:
+            return self._parse_yandex()
+        return self._parse_google()
+
+    def _parse_google(self):
+        return []
+
+    def _parse_yandex(self):
+
         soup = BeautifulSoup(self.get_text(), 'html.parser')
 
         captcha = bool(soup(href='captcha.min.css')) or bool(soup(href='captcha_random.min.css'))
