@@ -14,6 +14,7 @@ def main():
             page.positions = page.parse()
         except YandexCaptcha:
             page.captcha = True
+            page.text = ''
             app.logger.warning('Capcha in {!r}'.format(page))
         except HTMLParsingError as e:
             app.logger.error('Error parsing {!r}: {}'.format(page, e))
