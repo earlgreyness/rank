@@ -74,6 +74,11 @@ class Sites(Resource):
         return {'sites': [x.name for x in Site.query.order_by('name')]}
 
 
+class When(Resource):
+    def get(self):
+        return {'phrases': Phrase.get_parse_dates()}
+
+
 class Result(Resource):
     def get(self):
         return Page.construct_results()
@@ -85,3 +90,4 @@ api.add_resource(Accept, '/api/accept')
 api.add_resource(Result, '/api/result')
 api.add_resource(Queries, '/api/queries')
 api.add_resource(Sites, '/api/sites')
+api.add_resource(When, '/api/queries/when')

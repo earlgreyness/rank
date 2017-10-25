@@ -39,6 +39,15 @@ class Phrase(db.Model):
     last_parsed_date = Column(ArrowType(timezone=True))
 
     @classmethod
+    def get_parse_dates(cls):
+        phrases = {x.q: str(x.date_created) for x in Page.pages_query()}
+        phrases_all = {x.name for x in cls.query}
+        for phrase in phrases_all:
+            if phrase not in phrases:
+                phrases[phrase] = None
+        return sorted(phrases.items())
+
+    @classmethod
     def rotate(cls, n):
         q = cls.query
         q_1 = q.filter(cls.last_parsed_date.is_(None)).order_by(func.random()).limit(n)
