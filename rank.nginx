@@ -2,7 +2,7 @@ server {
 
     listen 80;
 
-    server_name graber.avto-podborka.ru;
+    server_name graber.speechanal.ru;
     charset utf-8;
     client_max_body_size 1m;
 
@@ -15,7 +15,7 @@ server {
 
 server {
     listen 80;
-    server_name grabber.avto-podborka.ru;
+    server_name grabber.speechanal.ru;
     charset utf-8;
     client_max_body_size 1m;
     location / {
